@@ -1,6 +1,10 @@
 # CACEIS - Human Capital Value
 
+<<<<<<< HEAD
 Ce projet regroupe la pipeline d'estimation de la **valeur humaine au travail** pour CACEIS, ainsi qu'un notebook séparé d'analyse statistique du dataset final.
+=======
+Ce projet regroupe la pipeline d'estimation de la **valeur humaine au travail** pour le cas CACEIS / Alberthon, ainsi qu'un notebook séparé d'analyse statistique du dataset final.
+>>>>>>> 59b7bda (Add CACEIS HCV pipeline, stats notebook, and provided data)
 
 ## Objectif
 

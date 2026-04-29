@@ -1,0 +1,36 @@
+{
+  "execution_date": "2026-04-29 16:54:54.658423",
+  "reference_date": "2026-04-28",
+  "population_size": 12711,
+  "hcv_formula": "(0.40*Q + 0.30*B + 0.30*R) * (0.70 + 0.60*E) * (1 - 0.70*attrition_risk) + 0.60*succession_score",
+  "components": {
+    "Q": "0.45 education + 0.40 performance + 0.15 certifications",
+    "B": "0.20 completion + 0.45 presence + 0.35 mobility_context",
+    "R": "0.50 role_scarcity + 0.35 market_benchmark + 0.15 contract_seniority",
+    "E": "0.20 sentiment + 0.45 inclusion + 0.35 participation",
+    "attrition": "0.35 low_tenure + 0.30 absence + 0.35 turnover_context",
+    "succession": "0.45 tenure_position + 0.55 learning_depth"
+  },
+  "summary": {
+    "employees": 12711,
+    "countries": 18,
+    "roles": 514,
+    "avg_hcv": 43.21,
+    "median_hcv": 42.11,
+    "avg_attrition_risk": 0.452,
+    "avg_training_hours": 29.81,
+    "comp_benchmark_coverage": 0.409,
+    "context_inclusion_coverage": 0.553,
+    "context_mobility_coverage": 0.29,
+    "context_absence_coverage": 0.553,
+    "performance_coverage": 1.0,
+    "absence_coverage": 0.178,
+    "training_coverage": 1.0
+  },
+  "segment_distribution": {
+    "High": 3306,
+    "Elite": 3180,
+    "Development Potential": 3178,
+    "Medium": 3047
+  }
+}
