@@ -1,10 +1,6 @@
 # CACEIS - Human Capital Value
 
-<<<<<<< HEAD
 Ce projet regroupe la pipeline d'estimation de la **valeur humaine au travail** pour CACEIS, ainsi qu'un notebook séparé d'analyse statistique du dataset final.
-=======
-Ce projet regroupe la pipeline d'estimation de la **valeur humaine au travail** pour le cas CACEIS / Alberthon, ainsi qu'un notebook séparé d'analyse statistique du dataset final.
->>>>>>> 59b7bda (Add CACEIS HCV pipeline, stats notebook, and provided data)
 
 ## Objectif
 
@@ -29,6 +25,15 @@ L'objectif est de :
 
 - [build_stats_notebook.py](./build_stats_notebook.py)
   Script utilitaire pour régénérer le notebook statistique.
+
+- [app_streamlit.py](./app_streamlit.py)
+  Application interactive de démonstration (pilotage global, simulation IA, recommandations, module non structuré MVP).
+
+- [app_services.py](./app_services.py)
+  Couche de services pour charger les données, entraîner les modèles et produire les recommandations.
+
+- [unstructured_mvp.py](./unstructured_mvp.py)
+  Extraction et agrégation simples des documents PDF/PPTX pour enrichissement exploratoire.
 
 - [outputs_hcv_notebook/caceis_hcv_dataset.csv](./outputs_hcv_notebook/caceis_hcv_dataset.csv)
   Dataset final exporté.
@@ -110,7 +115,7 @@ Le notebook [caceis_hcv_stats.ipynb](./caceis_hcv_stats.ipynb) contient :
 - comparaison des composantes du score par pays
 - lectures complémentaires par contrat et par rôle
 
-## Exécution
+## Exécution notebooks
 
 Depuis le dossier du projet :
 
@@ -123,6 +128,26 @@ Ordre recommandé :
 2. exécuter le notebook de haut en bas
 3. vérifier les exports dans `outputs_hcv_notebook/`
 4. ouvrir ensuite `caceis_hcv_stats.ipynb` pour la lecture descriptive
+
+## Exécution application Streamlit
+
+Installer les dépendances applicatives :
+
+```bash
+pip install -r requirements_app.txt
+```
+
+Lancer l'interface :
+
+```bash
+streamlit run app_streamlit.py
+```
+
+Fonctionnalités livrées dans l'application :
+- Pilotage global via KPI et graphiques interactifs
+- Simulation IA (prédiction de score HCV et segment)
+- Recommandations actionnables explicables
+- Module MVP PDF/PPTX (signaux textuels exploratoires)
 
 ## Points d'attention
 
