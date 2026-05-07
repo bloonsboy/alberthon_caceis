@@ -36,9 +36,11 @@ class AppPaths:
 
 
 def resolve_paths(project_root: Path | None = None) -> AppPaths:
-    root = (project_root or Path(__file__).resolve().parent).resolve()
-    data_root = root / "caceis-data-provided" / "Sujet Alberthon"
-    outputs_dir = root / "outputs_hcv_notebook"
+    # project root is one level above `src/` when called from code in `src/`
+    root = (project_root or Path(__file__).resolve().parent.parent).resolve()
+    # data should be placed by the user in the `data/` folder at project root
+    data_root = root / "data"
+    outputs_dir = root / "data" / "outputs_hcv_notebook"
     dataset_csv = outputs_dir / "caceis_hcv_dataset.csv"
     return AppPaths(
         project_root=root,
@@ -55,7 +57,9 @@ def _build_from_raw(paths: AppPaths) -> pd.DataFrame:
         mobility_fr_raw=sources["mobility_fr_raw"],
         absence_fr_context_raw=sources["absence_fr_context_raw"],
         absence_lu_context=sources["absence_lu_context"],
-        compensation_file=paths.data_root / "Finance" / "AlbertSchool_CACEIS_PL-FTE_22-25_Sent.xlsx",
+        compensation_file=paths.data_root
+        / "Finance"
+        / "AlbertSchool_CACEIS_PL-FTE_22-25_Sent.xlsx",
     )
     aggregates = build_employee_aggregates(
         perf=sources["perf"],
@@ -115,7 +119,9 @@ def prepare_dataset_for_app(df: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, A
 
     df = _ensure_absence_events(df)
 
-    th = pd.to_numeric(df.get("training_hours"), errors="coerce").fillna(0).clip(lower=0)
+    th = (
+        pd.to_numeric(df.get("training_hours"), errors="coerce").fillna(0).clip(lower=0)
+    )
     tc = pd.to_numeric(df.get("tenure_caceis_years"), errors="coerce").fillna(0)
     denom = tc.replace(0, np.nan) + 1
     training_intensity = (th / denom).replace([np.inf, -np.inf], np.nan).fillna(0)
@@ -123,15 +129,27 @@ def prepare_dataset_for_app(df: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, A
     df["training_intensity_score"] = minmax(df["training_intensity_log"])
 
     dl = df.get("degree_level")
-    df["education_score"] = dl.map(map_education) if dl is not None else pd.Series(0.5, index=df.index, dtype=float)
+    df["education_score"] = (
+        dl.map(map_education)
+        if dl is not None
+        else pd.Series(0.5, index=df.index, dtype=float)
+    )
     ct = df.get("contract_type")
-    df["contract_seniority"] = ct.map(map_contract) if ct is not None else pd.Series(0.6, index=df.index, dtype=float)
+    df["contract_seniority"] = (
+        ct.map(map_contract)
+        if ct is not None
+        else pd.Series(0.6, index=df.index, dtype=float)
+    )
 
     adays = pd.to_numeric(df.get("absence_days"), errors="coerce").fillna(0)
     df["absence_rate"] = (adays / 220).clip(0, 1)
 
     rk = df.get("role")
-    role_key = rk.fillna("Unknown").astype(str) if rk is not None else pd.Series(["Unknown"] * len(df), index=df.index)
+    role_key = (
+        rk.fillna("Unknown").astype(str)
+        if rk is not None
+        else pd.Series(["Unknown"] * len(df), index=df.index)
+    )
     role_share = role_key.map(role_key.value_counts() / max(len(df), 1))
     df["role_scarcity_score"] = minmax((1 / role_share.replace(0, np.nan))).fillna(0.5)
 
@@ -144,13 +162,19 @@ def prepare_dataset_for_app(df: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, A
     if "certification_rate" not in df.columns:
         df["certification_rate"] = 0.2
     else:
-        df["certification_rate"] = pd.to_numeric(df["certification_rate"], errors="coerce").fillna(0.2).clip(0, 1)
+        df["certification_rate"] = (
+            pd.to_numeric(df["certification_rate"], errors="coerce")
+            .fillna(0.2)
+            .clip(0, 1)
+        )
 
     df = _sanitize_categories(df)
     return df, meta
 
 
-def load_or_build_dataset(force_rebuild: bool = False, project_root: Path | None = None) -> pd.DataFrame:
+def load_or_build_dataset(
+    force_rebuild: bool = False, project_root: Path | None = None
+) -> pd.DataFrame:
     paths = resolve_paths(project_root=project_root)
     if not force_rebuild and paths.dataset_csv.exists():
         return pd.read_csv(paths.dataset_csv)
@@ -161,11 +185,15 @@ def train_models(df: pd.DataFrame) -> dict[str, Any]:
     return train_hcv_models(df)
 
 
-def compute_feature_importance(models: dict[str, Any]) -> tuple[pd.DataFrame, pd.DataFrame]:
+def compute_feature_importance(
+    models: dict[str, Any],
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     return build_feature_importance(models["reg_model"])
 
 
-def run_profile_prediction(df: pd.DataFrame, models: dict[str, Any], profile: dict[str, Any]) -> pd.Series:
+def run_profile_prediction(
+    df: pd.DataFrame, models: dict[str, Any], profile: dict[str, Any]
+) -> pd.Series:
     defaults = {
         "certification_rate": 0.0,
         "country": None,
@@ -175,7 +203,12 @@ def run_profile_prediction(df: pd.DataFrame, models: dict[str, Any], profile: di
         "entity": None,
         "bu": None,
     }
-    return score_new_employee(df=df, reg_model=models["reg_model"], clf_model=models["clf_model"], **(defaults | profile))
+    return score_new_employee(
+        df=df,
+        reg_model=models["reg_model"],
+        clf_model=models["clf_model"],
+        **(defaults | profile),
+    )
 
 
 def summarize_population(df: pd.DataFrame) -> dict[str, Any]:
@@ -184,7 +217,16 @@ def summarize_population(df: pd.DataFrame) -> dict[str, Any]:
 
 def build_recommendations(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty:
-        return pd.DataFrame(columns=["priority", "pillar", "title", "rationale", "target_population_pct", "kpi_to_track"])
+        return pd.DataFrame(
+            columns=[
+                "priority",
+                "pillar",
+                "title",
+                "rationale",
+                "target_population_pct",
+                "kpi_to_track",
+            ]
+        )
     rows: list[dict[str, Any]] = []
     population = len(df)
 
@@ -235,7 +277,9 @@ def build_recommendations(df: pd.DataFrame) -> pd.DataFrame:
             continue
         rows.append(
             {
-                "priority": 1 if impacted_share >= 0.40 else 2 if impacted_share >= 0.25 else 3,
+                "priority": (
+                    1 if impacted_share >= 0.40 else 2 if impacted_share >= 0.25 else 3
+                ),
                 "pillar": pillar,
                 "title": title,
                 "rationale": rationale,
@@ -260,7 +304,11 @@ def build_recommendations(df: pd.DataFrame) -> pd.DataFrame:
             }
         )
 
-    recs = pd.DataFrame(rows).sort_values(["priority", "target_population_pct"], ascending=[True, False]).reset_index(drop=True)
+    recs = (
+        pd.DataFrame(rows)
+        .sort_values(["priority", "target_population_pct"], ascending=[True, False])
+        .reset_index(drop=True)
+    )
     return recs
 
 

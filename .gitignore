@@ -2,3 +2,6 @@
 alberthon_caceis/
 __pycache__/
 .mypy_cache/
+
+# local data (do not track)
+/data/

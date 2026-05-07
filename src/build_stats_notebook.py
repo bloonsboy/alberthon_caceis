@@ -3,7 +3,11 @@ from pathlib import Path
 
 
 def md(text: str) -> dict:
-    return {"cell_type": "markdown", "metadata": {}, "source": [line + "\n" for line in text.strip("\n").split("\n")]}
+    return {
+        "cell_type": "markdown",
+        "metadata": {},
+        "source": [line + "\n" for line in text.strip("\n").split("\n")],
+    }
 
 
 def code(text: str, hidden: bool = False) -> dict:
@@ -20,16 +24,13 @@ def code(text: str, hidden: bool = False) -> dict:
 
 
 cells = [
-    md(
-        """
+    md("""
         # CACEIS HCV - Statistiques descriptives
 
         Ce notebook complète la pipeline HCV avec une lecture statistique du dataset final déjà construit.
         L'objectif est d'explorer la population, les répartitions par pays et diplôme, ainsi que les grands patterns RH.
-        """
-    ),
-    md(
-        """
+        """),
+    md("""
         ## Lecture du notebook
 
         Ce notebook est organisé en 4 temps :
@@ -37,8 +38,7 @@ cells = [
         2. KPI descriptifs
         3. répartitions par pays / diplôme / segment
         4. patterns utiles pour la restitution métier
-        """
-    ),
+        """),
     code(
         """
         from pathlib import Path
@@ -58,7 +58,7 @@ cells = [
     code(
         """
         BASE_DIR = Path.cwd()
-        DATASET_PATH = BASE_DIR / "outputs_hcv_notebook" / "caceis_hcv_dataset.csv"
+        DATASET_PATH = BASE_DIR / "data" / "outputs_hcv_notebook" / "caceis_hcv_dataset.csv"
 
         df = pd.read_csv(DATASET_PATH)
         print("Dataset :", DATASET_PATH)
@@ -68,8 +68,7 @@ cells = [
         hidden=True,
     ),
     md("## 1. Vue d'ensemble"),
-    code(
-        """
+    code("""
         overview = pd.DataFrame(
             {
                 "indicateur": [
@@ -91,11 +90,9 @@ cells = [
             }
         )
         overview
-        """
-    ),
+        """),
     md("## 2. KPI descriptifs"),
-    code(
-        """
+    code("""
         high_elite = df["HCV_segment"].isin(["High", "Elite"])
         kpis = pd.DataFrame(
             [
@@ -107,11 +104,9 @@ cells = [
             ]
         )
         kpis
-        """
-    ),
+        """),
     md("## 3. Répartition diplôme par pays"),
-    code(
-        """
+    code("""
         degree_country = (
             df.groupby(["country", "degree_level"], as_index=False)
             .agg(employees=("employee_id", "count"))
@@ -121,10 +116,8 @@ cells = [
             / degree_country.groupby("country")["employees"].transform("sum")
         )
         degree_country.sort_values(["country", "employees"], ascending=[True, False]).head(20)
-        """
-    ),
-    code(
-        """
+        """),
+    code("""
         top_countries = df["country"].value_counts().head(10).index
         heatmap_df = (
             degree_country[degree_country["country"].isin(top_countries)]
@@ -142,21 +135,17 @@ cells = [
         fig.update_layout(template="plotly_white")
         fig.show()
         print("Lecture: cette heatmap montre la structure de diplôme de chaque pays. Elle aide à voir si un pays concentre surtout des profils très qualifiés, des profils intermédiaires, ou une structure plus mixte.")
-        """
-    ),
+        """),
     md("## 4. HCV par pays et par diplôme"),
-    code(
-        """
+    code("""
         hcv_country_degree = (
             df.groupby(["country", "degree_level"], as_index=False)
             .agg(employees=("employee_id", "count"), avg_hcv=("HCV", "mean"))
             .query("employees >= 15")
         )
         hcv_country_degree.sort_values("avg_hcv", ascending=False).head(20)
-        """
-    ),
-    code(
-        """
+        """),
+    code("""
         focus = hcv_country_degree[hcv_country_degree["country"].isin(top_countries)]
         fig = px.scatter(
             focus,
@@ -170,11 +159,9 @@ cells = [
         fig.update_layout(template="plotly_white")
         fig.show()
         print("Lecture: ce graphe montre comment le HCV varie selon le niveau de diplôme à l'intérieur de chaque pays. Il permet de distinguer un effet pays d'un effet qualification.")
-        """
-    ),
+        """),
     md("## 5. Segments HCV par pays"),
-    code(
-        """
+    code("""
         segment_country = (
             df.groupby(["country", "HCV_segment"], as_index=False)
             .agg(employees=("employee_id", "count"))
@@ -184,10 +171,8 @@ cells = [
             / segment_country.groupby("country")["employees"].transform("sum")
         )
         segment_country.head()
-        """
-    ),
-    code(
-        """
+        """),
+    code("""
         fig = px.bar(
             segment_country[segment_country["country"].isin(top_countries)],
             x="country",
@@ -200,11 +185,9 @@ cells = [
         fig.update_layout(template="plotly_white", yaxis_tickformat=".0%")
         fig.show()
         print("Lecture: ce graphe compare la composition des pays par segment HCV. Il permet de voir quels pays concentrent davantage de profils Elite / High ou, au contraire, davantage de Development Potential.")
-        """
-    ),
+        """),
     md("## 6. Pays les plus hauts / bas sur les composantes"),
-    code(
-        """
+    code("""
         component_country = (
             df.groupby("country", as_index=False)
             .agg(
@@ -221,10 +204,8 @@ cells = [
             .sort_values("hcv", ascending=False)
         )
         component_country
-        """
-    ),
-    code(
-        """
+        """),
+    code("""
         component_plot = component_country.melt(
             id_vars=["country", "employees"],
             value_vars=["q", "b", "r", "e", "attr", "succ"],
@@ -242,11 +223,9 @@ cells = [
         fig.update_layout(template="plotly_white")
         fig.show()
         print("Lecture: cette vue compare le profil des pays sur les briques du score. Elle aide à expliquer pourquoi un pays est plus haut ou plus bas en HCV moyen.")
-        """
-    ),
+        """),
     md("## 7. Autres angles utiles"),
-    code(
-        """
+    code("""
         by_contract = (
             df.groupby("contract_type", as_index=False)
             .agg(employees=("employee_id", "count"), avg_hcv=("HCV", "mean"))
@@ -254,10 +233,8 @@ cells = [
             .sort_values("avg_hcv", ascending=False)
         )
         by_contract
-        """
-    ),
-    code(
-        """
+        """),
+    code("""
         top_roles = (
             df.groupby("role", as_index=False)
             .agg(employees=("employee_id", "count"), avg_hcv=("HCV", "mean"))
@@ -277,10 +254,8 @@ cells = [
         fig.update_layout(template="plotly_white")
         fig.show()
         print("Lecture: ce classement identifie les rôles les plus valorisés en moyenne parmi les rôles suffisamment représentés. Il permet de repérer les métiers les plus critiques ou les plus différenciants.")
-        """
-    ),
-    md(
-        """
+        """),
+    md("""
         ## 8. Pistes de lecture métier
 
         Quelques questions que ce notebook aide à traiter :
@@ -288,14 +263,17 @@ cells = [
         - les écarts de HCV viennent-ils surtout du pays, du diplôme, du contrat ou du rôle ?
         - la structure des segments HCV est-elle homogène selon les zones géographiques ?
         - quelles composantes expliquent le mieux les écarts entre pays ?
-        """
-    ),
+        """),
 ]
 
 notebook = {
     "cells": cells,
     "metadata": {
-        "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
+        "kernelspec": {
+            "display_name": "Python 3",
+            "language": "python",
+            "name": "python3",
+        },
         "language_info": {"name": "python", "version": "3.9"},
     },
     "nbformat": 4,
@@ -303,5 +281,7 @@ notebook = {
 }
 
 output_path = Path(__file__).with_name("caceis_hcv_stats.ipynb")
-output_path.write_text(json.dumps(notebook, ensure_ascii=False, indent=1), encoding="utf-8")
+output_path.write_text(
+    json.dumps(notebook, ensure_ascii=False, indent=1), encoding="utf-8"
+)
 print(output_path)
